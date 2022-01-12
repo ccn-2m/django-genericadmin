@@ -333,4 +333,4 @@
             }
         });
     });
-} (django.jQuery));
+} (jQuery));
