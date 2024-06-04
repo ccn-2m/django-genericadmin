@@ -9,10 +9,28 @@
 
  */
  (function($) {
+    function prefixWithObjRoot(url) {
+        // prefix the given URL with the necessary reverse paths to reach object root ('changelist' admin page)
+        if (window.location.pathname.endsWith('/change/') || window.location.pathname.endsWith('/change')) { // Django >= 1.9
+            return `../../${url}`;
+        }
+        else {
+            return `../${url}`;
+        }
+    }
+
+    if (! id_to_windowname) { // Django >= 3.1
+        function id_to_windowname(text) {
+            text = text.replace(/\./g, '__dot__');
+            text = text.replace(/\-/g, '__dash__');
+            return text;
+        }
+    }
+
     var GenericAdmin = {
         url_array: null,
         fields: null,
-        obj_url: "../obj-data/",
+        obj_url: prefixWithObjRoot('obj-data/'),
         admin_media_url: window.__admin_media_prefix__,
 		popup: '_popup',
 
@@ -73,13 +91,7 @@
         },
 
         getLookupUrl: function(cID) {
-            var forword = '../../../';
-            var suffix = '/change/';
-            var href = window.location.href;
-            if (href.indexOf(suffix, href.length - suffix.length) !== -1) {
-                forword += '../';
-            }
-            return forword + this.url_array[cID][0] + '/' + this.getLookupUrlParams(cID);
+            return prefixWithObjRoot('../../' + this.url_array[cID][0] + '/' + this.getLookupUrlParams(cID));
         },
 
         getFkId: function() {
@@ -314,7 +326,7 @@
 
     $(document).ready(function() {
         $.ajax({
-            url: '../genericadmin-init/',
+            url: prefixWithObjRoot('genericadmin-init/'),
             dataType: 'json',
             success: function(data) {
                 var url_array = data.url_array,
@@ -330,6 +342,9 @@
                         $.extend({}, InlineAdmin).install(fields, url_array, popup_var);
                     }
                 }
+            },
+            error: function(res, err) {
+                console.error(`cannot fetch genericadmin-init: ${err} - ${res.status} ${res.statusText}`);
             }
         });
     });
