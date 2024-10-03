@@ -32,13 +32,12 @@ try:
 except ImportError:
     from django.contrib.admin.options import IS_POPUP_VAR
 from  django.core.exceptions import ObjectDoesNotExist
+from django.forms import Media
 from django.views.generic import RedirectView
 
 JS_PATH = getattr(settings, 'GENERICADMIN_JS', 'genericadmin/js/')
 
 class BaseGenericModelAdmin(object):
-    class Media:
-        js = ()
 
     content_type_lookups = {}
     generic_fk_fields = []
@@ -46,19 +45,17 @@ class BaseGenericModelAdmin(object):
     content_type_whitelist = []
 
     def __init__(self, model, admin_site):
-        try:
-            media = list(self.Media.js)
-        except:
-            media = []
-        if VERSION >= (2,2):
-            media.append('admin/js/jquery.init.js') # Django >= 2.2
-        media.append(JS_PATH + 'genericadmin.js')
-        self.Media.js = tuple(media)
-
         self.content_type_whitelist = [s.lower() for s in self.content_type_whitelist]
         self.content_type_blacklist = [s.lower() for s in self.content_type_blacklist]
 
         super(BaseGenericModelAdmin, self).__init__(model, admin_site)
+
+    @property
+    def media(self):
+        return super().media + Media(js=[
+            'admin/js/jquery.init.js',
+            f'{JS_PATH}genericadmin.js',
+        ])
 
     def get_generic_field_list(self, request, prefix=''):
         if hasattr(self, 'ct_field') and hasattr(self, 'ct_fk_field'):
