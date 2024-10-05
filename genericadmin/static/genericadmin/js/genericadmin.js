@@ -9,22 +9,18 @@
 
  */
  (function($) {
+
+     function isObjectDetailPage() {
+         return window.location.pathname.endsWith('/change/');
+     }
+
     function prefixWithObjRoot(url) {
         // prefix the given URL with the necessary reverse paths to reach object root ('changelist' admin page)
-        if (window.location.pathname.endsWith('/change/') || window.location.pathname.endsWith('/change')) { // Django >= 1.9
-            return `../../${url}`;
-        }
-        else {
-            return `../${url}`;
-        }
+        return `../../${url}`;
     }
 
-    if (! id_to_windowname) { // Django >= 3.1
-        function id_to_windowname(text) {
-            text = text.replace(/\./g, '__dot__');
-            text = text.replace(/\-/g, '__dash__');
-            return text;
-        }
+    function id_to_windowname(text) {
+        return text;
     }
 
     var GenericAdmin = {
@@ -244,7 +240,9 @@
                 if (this.value) {
                     that.cID = this.value;
                     link_id = that.showLookupLink();
-                    $('#' + link_id).click(function(e) {
+                    $('#' + link_id).on('django:lookup-related', function(e) {
+                        e.preventDefault();
+                    }).click(function(e) {
                         e.preventDefault();
                         that.popRelatedObjectLookup(this);
                     });
@@ -325,6 +323,10 @@
     };
 
     $(document).ready(function() {
+        if (!isObjectDetailPage()) {
+            return;
+        }
+
         $.ajax({
             url: prefixWithObjRoot('genericadmin-init/'),
             dataType: 'json',
