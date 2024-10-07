@@ -10,13 +10,26 @@
  */
  (function($) {
 
-     function isObjectDetailPage() {
+     function isObjectChangePage() {
          return window.location.pathname.endsWith('/change/');
+     }
+
+     function isObjectAddPage() {
+         return window.location.pathname.endsWith('/add/');
+     }
+
+     function isObjectDetailPage() {
+        return isObjectChangePage() || isObjectAddPage();
      }
 
     function prefixWithObjRoot(url) {
         // prefix the given URL with the necessary reverse paths to reach object root ('changelist' admin page)
-        return `../../${url}`;
+        if (isObjectChangePage()) {
+            return `../../${url}`;
+        }
+        if (isObjectAddPage()) {
+            return `../${url}`;
+        }
     }
 
     function id_to_windowname(text) {
